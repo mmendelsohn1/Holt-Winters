@@ -1,0 +1,69 @@
+def do_predictions_add(series, season_length,alpha, beta, gamma, n_predictions):
+    result = []
+    predictions=[]
+    seasonal_components = initial_seasonal_components_add(series, season_length)
+    for i in range(len(series)+n_predictions):
+        if i==0:
+            trend=initial_trend_add(series,season_length)
+            level=series[0]
+            result.append(series[0])
+        elif  i>=len(series):
+            m=i-len(series)+1
+            predictions.append((level+m*trend)+seasonal_components[i%season_length])
+        else:
+            value = series[i]
+            prev_level = level
+            level = alpha*(value-seasonal_components[i%season_length])+(1-alpha)*(prev_level+trend)
+            trend = beta*(level - prev_level)+(1-beta)*(trend)
+            seasonal_components[i%season_length]=gamma*(value-level)+(1-gamma)*seasonal_components[i%season_length]
+            result.append(level+trend+seasonal_components[i%season_length])
+    return prediction
+    
+    def do_predictions_mult(series, season_length,alpha, beta, gamma, n_predictions):
+    result = []
+    predictions=[]
+    seasonal_components = initial_seasonal_components_mult(series, season_length)
+    for i in range(len(series)+n_predictions):
+        if i==0:
+            trend=initial_trend_mult(series,season_length)
+            level=series[0]
+            result.append(series[0])
+        elif  i>=len(series):
+            m = i-len(series)+1
+            predictions.append((level+m*trend)*seasonal_components[i%season_length])
+        else:
+            value = series[i]
+            prev_level = level
+            level = alpha*(value/seasonal_components[i%season_length])+(1-alpha)*(prev_level+trend)
+            trend = beta*(level - prev_level)+(1-beta)*(trend)
+            seasonal_components[i%season_length]=gamma*(value/level)+(1-gamma)*seasonal_components[i%season_length]
+            result.append((level+trend)*seasonal_components[i%season_length])
+    return predictions
+    
+    def find_least_SSE(series,season_length,num_seasons_to_use,prediction_func):
+    SSE=0
+    values_for_HW=series[:season_length*num_seasons_to_use]
+    check_against_predictions=series[season_length*num_seasons_to_use:]
+    Dict={}
+    a=[]
+    b=[]
+    c=[]
+    i=0
+    while i<1:
+        a.append(i)
+        b.append(i)
+        c.append(i)
+        i+=float(.1) ## make this value smaller for more accurate parameters
+    #for each set of parameters
+    for eacha in a:
+        for eachb in b:
+            SSE=0
+            for eachc in c:
+                pred = prediction_func(values_for_HW,season_length,eacha,eachb,eachc,len(check_against_predictions))
+                for i in range(len(pred)):
+                    ##compare actual and smoothed values to find least error
+                    SSE+=((check_against_predictions[i]-pred[i])**2)
+                Dict[SSE] = '%f  %f  %f' % (eacha,eachb,eachc)
+    small = min(Dict)
+    small_key = Dict[small]
+    return small, small_key
