@@ -1,0 +1,85 @@
+import matplotlib.pyplot as plt
+import numpy as np
+def initial_trend_add(series, season_length):
+    sum = 0.0
+    for i in range(season_length):
+        sum += float(series[i+season_length] - series[i]) / season_length
+    return sum / season_length
+    
+def initial_seasonal_components_add(series, season_length):
+    seasonals = {}
+    season_averages = []
+    n_seasons = int(len(series)/season_length)
+    # compute season averages
+    for j in range(n_seasons):
+        season_averages.append(sum(series[season_length*j:season_length*j+season_length])/float(season_length))
+    # compute initial values
+    for i in range(season_length):
+        sum_of_vals_over_avg = 0.0
+        for j in range(n_seasons):
+            sum_of_vals_over_avg += series[season_length*j+i]-season_averages[j]
+        seasonals[i] = sum_of_vals_over_avg/n_seasons
+    return seasonals
+    
+def Holt_Winters_additive(series, season_length, alpha, beta, gamma, n_preds):
+    result = []
+    seasonals = initial_seasonal_components_add(series, season_length)
+    for i in range(len(series)+n_preds):
+        if i == 0: # initial values
+            smooth = series[0]
+            trend = initial_trend_add(series, season_length)
+            result.append(series[0])
+            continue
+        if i >= len(series): # we are forecasting
+            m = i - len(series) + 1
+            result.append((smooth + m*trend) + seasonals[i%season_length])
+        else:
+            val = series[i]
+            last_smooth, smooth = smooth, alpha*(val-seasonals[i%season_length]) + (1-alpha)*(smooth+trend)
+            trend = beta * (smooth-last_smooth) + (1-beta)*trend
+            seasonals[i%season_length] = gamma*(val-smooth) + (1-gamma)*seasonals[i%season_length]
+            result.append(smooth+trend+seasonals[i%season_length])
+    return result
+    
+def initial_trend_mult(series, season_length):
+    sum=0.0
+    for i in range (0,season_length):
+        sum+=(series[i+season_length] -series[i])/season_length
+    return sum/season_length
+
+def initial_seasonal_components_mult(series,season_length): ## multiplicative
+    num_seasons=int(len(series)/season_length)
+    seasonal_components =[]
+    season_averages = []
+    for i  in range(num_seasons):
+        sum=0
+        for j in range(season_length):
+            sum+=series[j+season_length*i]
+        season_averages.append(float(sum/season_length))
+    #computes seasonal components 
+    for i in range(season_length): 
+        total=0
+        for j in range(num_seasons):
+                total+=series[season_length*j+i]/season_averages[j]
+        seasonal_components.append(total/num_seasons)  
+    return seasonal_components
+    
+def Holt_Winters_multiplicative(series, season_length,alpha, beta, gamma, n_predictions):
+    result = []
+    seasonal_components = initial_seasonal_components_mult(series, season_length)
+    for i in range(len(series)+n_predictions):
+        if i==0:
+            trend=initial_trend_mult(series,season_length)
+            level=series[0]
+            result.append(series[0])
+        elif  i>=len(series):
+            m = i-len(series)+1
+            result.append((level+m*trend)*seasonal_components[i%season_length])
+        else:
+            value = series[i]
+            prev_level = level
+            level = alpha*(value/seasonal_components[i%season_length])+(1-alpha)*(prev_level+trend)
+            trend = beta*(level - prev_level)+(1-beta)*(trend)
+            seasonal_components[i%season_length]=gamma*(value/level)+(1-gamma)*seasonal_components[i%season_length]
+            result.append((level+trend)*seasonal_components[i%season_length])
+    return result
