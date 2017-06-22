@@ -18,8 +18,7 @@ def do_predictions_add(series, season_length,alpha, beta, gamma, n_predictions):
             seasonal_components[i%season_length]=gamma*(value-level)+(1-gamma)*seasonal_components[i%season_length]
             result.append(level+trend+seasonal_components[i%season_length])
     return prediction
-    
-    def do_predictions_mult(series, season_length,alpha, beta, gamma, n_predictions):
+def do_predictions_mult(series, season_length,alpha, beta, gamma, n_predictions):
     result = []
     predictions=[]
     seasonal_components = initial_seasonal_components_mult(series, season_length)
@@ -40,7 +39,7 @@ def do_predictions_add(series, season_length,alpha, beta, gamma, n_predictions):
             result.append((level+trend)*seasonal_components[i%season_length])
     return predictions
     
-    def find_least_SSE(series,season_length,num_seasons_to_use,prediction_func):
+def find_least_SSE(series,season_length,num_seasons_to_use,prediction_func):
     SSE=0
     values_for_HW=series[:season_length*num_seasons_to_use]
     check_against_predictions=series[season_length*num_seasons_to_use:]
