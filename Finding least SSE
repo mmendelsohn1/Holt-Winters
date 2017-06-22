@@ -1,0 +1,28 @@
+## finds parameters which minimize the SSE between actual values and smoothed values. Given more data,
+##this should compare forecasted values with actual values
+##
+def find_least_SSE(series,season_length,HW_func):
+    SSE=0
+    list_of_SSE=[]
+    Dict={}
+    a=[]
+    b=[]
+    c=[]
+    i=0
+    while i<1:
+        a.append(i)
+        b.append(i)
+        c.append(i)
+        i+=float(.1) ## make this value smaller for more accurate parameters
+    for eacha in a:
+        for eachb in b:
+            SSE=0
+            for eachc in c:
+                HW = HW_func(series,season_length,eacha,eachb,eachc,0)
+                for i in series:
+                    ##compare actual and smoothed values to find least error
+                    SSE+=((series[i]-HW[i])**2)
+                Dict[SSE] = '%f  %f  %f' % (eacha,eachb,eachc)
+    small = min(Dict)
+    small_key = Dict[small]
+    return small, small_key
